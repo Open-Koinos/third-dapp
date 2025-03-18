@@ -1,7 +1,7 @@
 {
-  "name": "Koinos Wallet",
-  "short_name": "KoinWallet",
-  "description": "Manage your Koinos tokens and check balances",
+  "name": "Second Koinos Dapp",
+  "short_name": "second-dapp",
+  "description": "Check multiple token balances",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#f5f5f5",
