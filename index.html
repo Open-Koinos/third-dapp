@@ -17,6 +17,46 @@
       margin: 0 auto;
       background: #f5f5f5;
     }
+    .refresh-button {
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .refresh-button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+    .countdown {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
     .header {
       background: #000;
       color: #fff;
@@ -243,13 +283,18 @@
   </script>
 
   <script type="text/template" id="token-status-template">
-    <div style="padding: 0.5rem; margin-bottom: 0.5rem; background: #f9f9f9; border-radius: 0.3rem;">
+    <div style="padding: 0.5rem; margin-bottom: 0.5rem; background: #f9f9f9; border-radius: 0.3rem; position: relative;">
       <div>{{statusMessage}}</div>
       <div>Found: {{foundCount}} tokens</div>
       <div id="current-token">{{currentStatus}}</div>
       {{additionalInfo}}
+      <button id="refresh-tokens-button" class="refresh-button" title="Refresh token list">↻</button>
     </div>
     <div id="token-results"></div>
+  </script>
+  
+  <script type="text/template" id="countdown-template">
+    <div id="refresh-countdown" class="countdown">{{seconds}}</div>
   </script>
 
   <script>
@@ -300,6 +345,9 @@
         this.STORAGE_CHECK_TIMESTAMPS = 'koinosWallet_checkTimestamps';
         this.CHECK_INTERVAL = 5000; // 5 seconds for tokens with balances
         this.INITIAL_CHECK_INTERVAL = 60000; // 60 seconds for new tokens
+        this.REFRESH_COOLDOWN = 10; // 10 seconds cooldown for manual refresh
+        this.lastRefreshTime = 0;
+        this.refreshCooldownTimer = null;
         this.TOKEN_LIST_URL = 'https://raw.githubusercontent.com/koindx/token-list/refs/heads/main/src/tokens/mainnet.json';
       }
 
@@ -429,6 +477,102 @@
         // Online/offline events
         window.addEventListener('online', () => this.handleOnlineStatus(true));
         window.addEventListener('offline', () => this.handleOnlineStatus(false));
+        
+        // Set up refresh button event (using event delegation since the button may not exist yet)
+        document.addEventListener('click', (e) => {
+          if (e.target && e.target.id === 'refresh-tokens-button') {
+            this.handleTokenRefresh();
+          }
+        });
+      }
+      
+      handleTokenRefresh() {
+        const now = Date.now();
+        const timeSinceLastRefresh = now - this.state.lastRefreshTime;
+        const cooldownTime = this.state.REFRESH_COOLDOWN * 1000;
+        
+        // Check if cooldown period has passed
+        if (timeSinceLastRefresh < cooldownTime) {
+          // If still in cooldown, show countdown
+          this.startRefreshCooldown(Math.ceil((cooldownTime - timeSinceLastRefresh) / 1000));
+          return;
+        }
+        
+        // Update last refresh time
+        this.state.lastRefreshTime = now;
+        
+        // Disable refresh button
+        const refreshButton = document.getElementById('refresh-tokens-button');
+        if (refreshButton) {
+          refreshButton.disabled = true;
+        }
+        
+        // Fetch token balances
+        if (this.state.currentWallet) {
+          this.fetchTokenBalances(this.state.currentWallet, true);
+        }
+      }
+      
+      startRefreshCooldown(seconds) {
+        // Clear any existing timer
+        if (this.state.refreshCooldownTimer) {
+          clearInterval(this.state.refreshCooldownTimer);
+        }
+        
+        // Get the tokens status container
+        const statusContainer = document.querySelector('#tokensTab article h3').parentElement;
+        
+        // Add the countdown element
+        const countdownElement = document.createElement('div');
+        countdownElement.innerHTML = this.template.render('countdown-template', {
+          seconds: seconds
+        });
+        
+        // Replace existing countdown or append new one
+        const existingCountdown = document.getElementById('refresh-countdown');
+        if (existingCountdown) {
+          existingCountdown.parentElement.replaceWith(countdownElement.firstElementChild);
+        } else {
+          statusContainer.appendChild(countdownElement.firstElementChild);
+        }
+        
+        // Hide the refresh button
+        const refreshButton = document.getElementById('refresh-tokens-button');
+        if (refreshButton) {
+          refreshButton.style.display = 'none';
+        }
+        
+        // Start countdown timer
+        let remainingSeconds = seconds;
+        
+        this.state.refreshCooldownTimer = setInterval(() => {
+          remainingSeconds--;
+          
+          // Update countdown display
+          const countdownDisplay = document.getElementById('refresh-countdown');
+          if (countdownDisplay) {
+            countdownDisplay.textContent = remainingSeconds;
+          }
+          
+          // When countdown reaches zero
+          if (remainingSeconds <= 0) {
+            // Clear interval
+            clearInterval(this.state.refreshCooldownTimer);
+            this.state.refreshCooldownTimer = null;
+            
+            // Remove countdown element
+            const countdownToRemove = document.getElementById('refresh-countdown');
+            if (countdownToRemove) {
+              countdownToRemove.remove();
+            }
+            
+            // Show and enable refresh button
+            if (refreshButton) {
+              refreshButton.style.display = 'flex';
+              refreshButton.disabled = false;
+            }
+          }
+        }, 1000);
       }
 
       handleTabClick(event) {
@@ -552,7 +696,7 @@
         }
       }
 
-      async fetchTokenBalances(wallet) {
+      async fetchTokenBalances(wallet, isManualRefresh = false) {
         const tokenListElement = document.getElementById('tokenList');
         
         tokenListElement.innerHTML = '<div class="loading">Starting token balance check...</div>';
@@ -619,7 +763,8 @@
             for (let i = 0; i < this.state.tokenListData.length; i++) {
               const token = this.state.tokenListData[i];
               
-              if (!this.state.shouldCheckToken(wallet, token.address)) {
+              // If it's a manual refresh, skip the time check
+              if (!isManualRefresh && !this.state.shouldCheckToken(wallet, token.address)) {
                 const cachedBalance = this.state.getCachedBalance(wallet, token.address);
                 console.log(`Skipping token ${token.symbol} - too recent (${cachedBalance ? 'has balance' : 'no balance'})`);
                 continue;
@@ -698,6 +843,15 @@
               <div>Last updated: ${new Date().toLocaleTimeString()}</div>
               ${additionalInfo}
             `;
+            
+            // Update last refresh time on completion
+            this.state.lastRefreshTime = Date.now();
+            
+            // Re-enable the refresh button if it exists
+            const refreshButton = document.getElementById('refresh-tokens-button');
+            if (refreshButton) {
+              refreshButton.disabled = false;
+            }
           }
           
         } catch (error) {
