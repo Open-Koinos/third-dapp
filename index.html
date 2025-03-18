@@ -60,7 +60,7 @@
       </article>
     </div>
     
-    <a href="https://github.com/Open-Koinos/second-dapp/" class="link-item">GitHub Repo</a>
+    <a href="https://github.com/Open-Koinos/third-dapp/" class="link-item">GitHub Repo</a>
   </template>
 
   <template id="token-item-template">
@@ -81,6 +81,19 @@
       {{additionalInfo}}
     </div>
     <div id="token-results"></div>
+  </template>
+
+  <template id="token-item-template">
+    <div class="token-item" data-address="{{address}}" style="{{animation}}">
+      <div class="token-info">
+        <img src="{{logoURI}}" alt="{{symbol}}" class="token-icon">
+        <div class="token-name">{{symbol}} - {{name}}</div>
+      </div>
+      <div class="token-balance-container">
+        <div class="token-balance">{{balance}}</div>
+        <div class="token-usd-value">{{usdValue}}</div>
+      </div>
+    </div>
   </template>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>

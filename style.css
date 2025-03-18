@@ -210,3 +210,27 @@ button {
   background: #f9f9f9;
   border-radius: 0.3rem;
 }
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.token-balance-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.token-balance {
+  font-weight: bold;
+}
+
+.token-usd-value {
+  font-size: var(--small-font);
+  color: #5c975c;
+  background: rgba(92, 151, 92, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
