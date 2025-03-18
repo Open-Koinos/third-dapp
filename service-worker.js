@@ -8,7 +8,8 @@ const ASSETS_TO_CACHE = [
   '/icons/icon-192x192.png',
   '/icons/maskable-icon.png',
   'https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css',
-  'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js'
+  'https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js',
+  'https://unpkg.com/@koindx/v2-sdk/dist/index.js'
 ];
 
 // Install event - cache assets

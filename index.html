@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="Koinos token tracker">
+  <meta name="description" content="Koinos wallet and token tracker">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <title>Second Dapp</title>
+  <title>Koinos Wallet</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="manifest" href="manifest.json">
@@ -16,11 +16,11 @@
 <body>
   <div id="offline-alert" class="offline-alert">You are currently offline. Some features may be limited.</div>
   
-  <header class="header"><h1>Second Dapp</h1></header>
+  <header class="header"><h1>Koinos Wallet</h1></header>
   
   <main id="app-container"><!-- App content will be rendered here --></main>
   
-  <footer class="footer">&copy; Groovy Stuff Here</footer>
+  <footer class="footer">&copy; Koinos Wallet PWA</footer>
   
   <div id="install-banner" class="install-banner">
     Install this app on your device
@@ -28,16 +28,50 @@
   </div>
 
   <!-- Templates -->
+  <template id="token-item-template">
+    <div class="token-item" data-address="{{address}}" style="{{animation}}">
+      <div class="token-info">
+        <img src="{{logoURI}}" alt="{{symbol}}" class="token-icon">
+        <div class="token-name">{{symbol}} - {{name}}</div>
+      </div>
+      <div class="token-details">
+        <div class="token-balance">{{balance}}</div>
+        <div class="token-price-container">
+          <div class="token-usd-value">{{usdValue}}</div>
+          <div class="token-unit-price">{{unitPrice}}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+  
+  <template id="token-item-template">
+    <div class="token-item" data-address="{{address}}" style="{{animation}}">
+      <div class="token-info">
+        <img src="{{logoURI}}" alt="{{symbol}}" class="token-icon">
+        <div class="token-name">{{symbol}} - {{name}}</div>
+      </div>
+      <div class="token-details">
+        <div class="token-balance">{{balance}}</div>
+        <div class="token-price-container">
+          <div class="token-usd-value">{{usdValue}}</div>
+          <div class="token-unit-price">{{unitPrice}}</div>
+        </div>
+      </div>
+    </div>
+  </template>
+  
   <template id="main-template">
     <div class="tab-container">
       <div class="tab active" data-tab="balance">Koin Balance</div>
       <div class="tab" data-tab="tokens">All Tokens</div>
+      <div class="tab" data-tab="settings">Settings</div>
     </div>
     
     <div id="balanceTab" class="tab-content active">
       <article class="balance-card">
         <div class="balance-label" id="balanceLabel">Balance</div>
         <div class="balance-value" id="balance">Loading...</div>
+        <div class="balance-usd-value" id="balanceUsdValue"></div>
       </article>
       
       <article>
@@ -60,7 +94,22 @@
       </article>
     </div>
     
-    <a href="https://github.com/Open-Koinos/third-dapp/" class="link-item">GitHub Repo</a>
+    <div id="settingsTab" class="tab-content">
+      <article>
+        <h3>Settings</h3>
+        <form id="settingsForm">
+          <label for="tokenListUrl">Token List URL</label>
+          <input type="text" id="tokenListUrl" placeholder="Enter custom token list URL">
+          <div class="info-text">Default: https://raw.githubusercontent.com/koindx/token-list/refs/heads/main/src/tokens/mainnet.json</div>
+          
+          <button type="submit" id="saveSettingsButton">Save Settings</button>
+          <button type="button" id="resetSettingsButton">Reset to Default</button>
+        </form>
+        <div id="settingsMessage" class="settings-message"></div>
+      </article>
+    </div>
+    
+    <a href="https://github.com/Open-Koinos/second-dapp/" class="link-item">GitHub Repo</a>
   </template>
 
   <template id="token-item-template">
@@ -89,7 +138,7 @@
         <img src="{{logoURI}}" alt="{{symbol}}" class="token-icon">
         <div class="token-name">{{symbol}} - {{name}}</div>
       </div>
-      <div class="token-balance-container">
+      <div class="token-details">
         <div class="token-balance">{{balance}}</div>
         <div class="token-usd-value">{{usdValue}}</div>
       </div>

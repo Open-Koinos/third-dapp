@@ -217,20 +217,118 @@ button {
   align-items: flex-end;
 }
 
-.token-balance-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .token-balance {
   font-weight: bold;
 }
 
 .token-usd-value {
   font-size: var(--small-font);
-  color: #5c975c;
-  background: rgba(92, 151, 92, 0.1);
-  padding: 2px 6px;
+  color: var(--light-text);
+  margin-top: 2px;
+}
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.token-balance {
+  font-weight: bold;
+}
+
+.token-price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.token-usd-value {
+  font-size: var(--small-font);
+  color: var(--light-text);
+  margin-top: 2px;
+}
+
+.token-unit-price {
+  font-size: calc(var(--small-font) - 0.1rem);
+  color: var(--light-text);
+  opacity: 0.8;
+}
+
+.balance-usd-value {
+  font-size: var(--medium-font);
+  color: var(--light-text);
+  margin-top: 5px;
+}
+
+.token-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.token-balance {
+  font-weight: bold;
+}
+
+.token-price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.token-usd-value {
+  font-size: var(--small-font);
+  color: #2e8b57; /* Sea green color */
+  margin-top: 2px;
+  font-weight: bold;
+}
+
+.token-unit-price {
+  font-size: calc(var(--small-font) - 0.1rem);
+  color: var(--light-text);
+  opacity: 0.8;
+}
+
+.balance-usd-value {
+  font-size: var(--medium-font);
+  color: #2e8b57; /* Sea green color */
+  margin-top: 5px;
+  font-weight: bold;
+}
+
+/* Settings styles */
+.info-text {
+  font-size: var(--small-font);
+  color: var(--light-text);
+  margin-bottom: var(--small-padding);
+}
+
+.settings-message {
+  margin-top: var(--small-padding);
+  padding: var(--small-padding);
   border-radius: 4px;
+  font-size: var(--small-font);
+  display: none;
+}
+
+.settings-message.success {
+  display: block;
+  background-color: #dff0d8;
+  color: #3c763d;
+  border: 1px solid #d6e9c6;
+}
+
+.settings-message.error {
+  display: block;
+  background-color: #f2dede;
+  color: #a94442;
+  border: 1px solid #ebccd1;
+}
+
+#resetSettingsButton {
+  background-color: #f8f9fa;
+  color: #343a40;
+  border: 1px solid #ced4da;
+  margin-top: var(--small-padding);
 }

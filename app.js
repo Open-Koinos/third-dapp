@@ -4,21 +4,17 @@ class AppState {
     this.tokenListData = [];
     this.currentWallet = '';
     this.tokenPriceData = {};
-    this.poolData = {};
     this.STORAGE_TOKEN_BALANCES = 'koinosWallet_tokenBalances';
     this.STORAGE_CHECK_TIMESTAMPS = 'koinosWallet_checkTimestamps';
     this.STORAGE_PRICE_DATA = 'koinosWallet_priceData';
     this.STORAGE_PRICE_TIMESTAMP = 'koinosWallet_priceTimestamp';
-    this.STORAGE_POOL_DATA = 'koinosWallet_poolData';
-    this.STORAGE_POOL_TIMESTAMP = 'koinosWallet_poolTimestamp';
+    this.STORAGE_CUSTOM_TOKEN_LIST_URL = 'koinosWallet_customTokenListURL';
     this.CHECK_INTERVAL = 5000; // 5 seconds for tokens with balances
     this.INITIAL_CHECK_INTERVAL = 60000; // 60 seconds for new tokens
     this.PRICE_CHECK_INTERVAL = 300000; // 5 minutes for price data
-    this.POOL_CHECK_INTERVAL = 300000; // 5 minutes for pool data
-    this.TOKEN_LIST_URL = 'https://raw.githubusercontent.com/koindx/token-list/refs/heads/main/src/tokens/mainnet.json';
+    this.DEFAULT_TOKEN_LIST_URL = 'https://raw.githubusercontent.com/koindx/token-list/refs/heads/main/src/tokens/mainnet.json';
+    this.TOKEN_LIST_URL = this.getCustomTokenListUrl() || this.DEFAULT_TOKEN_LIST_URL;
     this.PRICE_API_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=koinos&vs_currencies=usd';
-    this.POOL_API_URL = 'https://api.koindx.com/v1/pools';
-    this.KOIN_ADDRESS = '15DJN4a8SgrbGhhGksSBASiSYjGnMU8dGL';
   }
 
   loadCachedData() {
@@ -88,7 +84,7 @@ class AppState {
     }
   }
 
-  // Methods to get and save price data
+  // Add methods to get and save price data
   getPriceData() {
     try {
       const priceDataJson = localStorage.getItem(this.STORAGE_PRICE_DATA);
@@ -125,40 +121,48 @@ class AppState {
     }
   }
 
-  // Methods to get and save pool data
-  getPoolData() {
+  // Custom token list URL methods
+  getCustomTokenListUrl() {
     try {
-      const poolDataJson = localStorage.getItem(this.STORAGE_POOL_DATA);
-      const poolTimestampJson = localStorage.getItem(this.STORAGE_POOL_TIMESTAMP);
-      
-      const poolData = poolDataJson ? JSON.parse(poolDataJson) : {};
-      const timestamp = poolTimestampJson ? JSON.parse(poolTimestampJson) : 0;
-      
-      return { poolData, timestamp };
+      return localStorage.getItem(this.STORAGE_CUSTOM_TOKEN_LIST_URL) || null;
     } catch (error) {
-      console.error('Error loading pool data:', error);
-      return { poolData: {}, timestamp: 0 };
+      console.error('Error getting custom token list URL:', error);
+      return null;
     }
   }
 
-  savePoolData(poolData) {
+  saveCustomTokenListUrl(url) {
     try {
-      localStorage.setItem(this.STORAGE_POOL_DATA, JSON.stringify(poolData));
-      localStorage.setItem(this.STORAGE_POOL_TIMESTAMP, JSON.stringify(Date.now()));
-      this.poolData = poolData;
-    } catch (error) {
-      console.error('Error saving pool data:', error);
-    }
-  }
-
-  shouldCheckPools() {
-    try {
-      const { timestamp } = this.getPoolData();
-      const timeElapsed = Date.now() - timestamp;
-      return timeElapsed > this.POOL_CHECK_INTERVAL;
-    } catch (error) {
-      console.error('Error checking pool timestamp:', error);
+      if (url && url.trim()) {
+        localStorage.setItem(this.STORAGE_CUSTOM_TOKEN_LIST_URL, url.trim());
+        this.TOKEN_LIST_URL = url.trim();
+      } else {
+        localStorage.removeItem(this.STORAGE_CUSTOM_TOKEN_LIST_URL);
+        this.TOKEN_LIST_URL = this.DEFAULT_TOKEN_LIST_URL;
+      }
+      
+      // Clear token list data to force reload
+      this.tokenListData = [];
+      
       return true;
+    } catch (error) {
+      console.error('Error saving custom token list URL:', error);
+      return false;
+    }
+  }
+
+  resetToDefaultTokenListUrl() {
+    try {
+      localStorage.removeItem(this.STORAGE_CUSTOM_TOKEN_LIST_URL);
+      this.TOKEN_LIST_URL = this.DEFAULT_TOKEN_LIST_URL;
+      
+      // Clear token list data to force reload
+      this.tokenListData = [];
+      
+      return true;
+    } catch (error) {
+      console.error('Error resetting token list URL:', error);
+      return false;
     }
   }
 }
@@ -226,9 +230,65 @@ class AppController {
     // Update button
     document.getElementById('updateButton').addEventListener('click', () => this.handleUpdate());
     
+    // Settings form
+    document.getElementById('settingsForm').addEventListener('submit', (e) => this.handleSettingsSave(e));
+    document.getElementById('resetSettingsButton').addEventListener('click', () => this.handleSettingsReset());
+    
+    // Populate settings form
+    this.populateSettingsForm();
+    
     // Online/offline events
     window.addEventListener('online', () => this.handleOnlineStatus(true));
     window.addEventListener('offline', () => this.handleOnlineStatus(false));
+  }
+
+  handleSettingsSave(event) {
+    event.preventDefault();
+    const tokenListUrl = document.getElementById('tokenListUrl').value.trim();
+    
+    const success = this.state.saveCustomTokenListUrl(tokenListUrl);
+    const messageElement = document.getElementById('settingsMessage');
+    
+    if (success) {
+      messageElement.textContent = 'Settings saved successfully. Token list will be updated on next refresh.';
+      messageElement.className = 'settings-message success';
+      
+      // Hide message after 3 seconds
+      setTimeout(() => {
+        messageElement.className = 'settings-message';
+      }, 3000);
+    } else {
+      messageElement.textContent = 'Error saving settings. Please try again.';
+      messageElement.className = 'settings-message error';
+    }
+  }
+
+  handleSettingsReset() {
+    const success = this.state.resetToDefaultTokenListUrl();
+    const messageElement = document.getElementById('settingsMessage');
+    
+    if (success) {
+      // Update the input field
+      document.getElementById('tokenListUrl').value = '';
+      
+      messageElement.textContent = 'Settings reset to default. Token list will be updated on next refresh.';
+      messageElement.className = 'settings-message success';
+      
+      // Hide message after 3 seconds
+      setTimeout(() => {
+        messageElement.className = 'settings-message';
+      }, 3000);
+    } else {
+      messageElement.textContent = 'Error resetting settings. Please try again.';
+      messageElement.className = 'settings-message error';
+    }
+  }
+
+  populateSettingsForm() {
+    const customUrl = this.state.getCustomTokenListUrl();
+    if (customUrl) {
+      document.getElementById('tokenListUrl').value = customUrl;
+    }
   }
 
   handleTabClick(event) {
@@ -302,135 +362,30 @@ class AppController {
     }
   }
 
-  async fetchPoolData() {
+  calculateUsdValue(balance, symbol) {
     try {
-      if (!this.isOnline) {
-        console.log('Offline: Using cached pool data');
-        const { poolData } = this.state.getPoolData();
-        this.state.poolData = poolData;
-        console.log('Cached pool data:', poolData);
-        return poolData;
-      }
-      
-      if (!this.state.shouldCheckPools()) {
-        console.log('Using cached pool data');
-        const { poolData } = this.state.getPoolData();
-        this.state.poolData = poolData;
-        console.log('Cached pool data:', poolData);
-        return poolData;
-      }
-      
-      console.log('Fetching fresh pool data from KoinDX');
-      const response = await axios.get(this.state.POOL_API_URL);
-      
-      if (response.data && Array.isArray(response.data)) {
-        console.log('Raw pool data:', response.data);
+      // For now, we only have KOIN price data
+      if (symbol === 'KOIN' && 
+          this.state.tokenPriceData && 
+          this.state.tokenPriceData.koinos && 
+          this.state.tokenPriceData.koinos.usd) {
         
-        // Process the pool data
-        const processedPoolData = {};
+        const price = this.state.tokenPriceData.koinos.usd;
+        const balanceNum = parseFloat(balance);
         
-        for (const pool of response.data) {
-          if (pool.token0 && pool.token1 && pool.reserves0 && pool.reserves1) {
-            // Check if one of the tokens is KOIN
-            if (pool.token0.address === this.state.KOIN_ADDRESS) {
-              // Token1 to KOIN ratio
-              processedPoolData[pool.token1.address] = {
-                symbol: pool.token1.symbol,
-                koinPerToken: parseFloat(pool.reserves0) / parseFloat(pool.reserves1), // KOIN/token ratio
-                tokenPerKoin: parseFloat(pool.reserves1) / parseFloat(pool.reserves0),  // token/KOIN ratio
-                pool: `${pool.token0.symbol}/${pool.token1.symbol}`
-              };
-              console.log(`Found pool for ${pool.token1.symbol}: ${pool.token0.symbol}/${pool.token1.symbol}`);
-            } else if (pool.token1.address === this.state.KOIN_ADDRESS) {
-              // Token0 to KOIN ratio
-              processedPoolData[pool.token0.address] = {
-                symbol: pool.token0.symbol,
-                koinPerToken: parseFloat(pool.reserves1) / parseFloat(pool.reserves0), // KOIN/token ratio
-                tokenPerKoin: parseFloat(pool.reserves0) / parseFloat(pool.reserves1),  // token/KOIN ratio
-                pool: `${pool.token0.symbol}/${pool.token1.symbol}`
-              };
-              console.log(`Found pool for ${pool.token0.symbol}: ${pool.token0.symbol}/${pool.token1.symbol}`);
-            }
-          }
+        if (!isNaN(balanceNum) && price) {
+          const usdValue = balanceNum * price;
+          return {
+            total: usdValue.toFixed(2),
+            price: price.toFixed(4)
+          };
         }
-        
-        console.log('Processed pool data:', processedPoolData);
-        this.state.savePoolData(processedPoolData);
-        return processedPoolData;
-      } else {
-        console.error('Invalid pool data:', response.data);
-        const { poolData } = this.state.getPoolData();
-        this.state.poolData = poolData;
-        console.log('Using cached pool data due to invalid response');
-        return poolData;
-      }
-    } catch (error) {
-      console.error('Error fetching pool data:', error);
-      const { poolData } = this.state.getPoolData();
-      this.state.poolData = poolData;
-      return poolData;
-    }
-  }
-
-  calculateUsdValue(balance, symbol, tokenAddress) {
-    try {
-      console.log(`Calculating USD value for ${symbol} (${tokenAddress}), balance: ${balance}`);
-      
-      // Direct USD calculation for KOIN
-      if (symbol === 'KOIN' || tokenAddress === this.state.KOIN_ADDRESS) {
-        if (this.state.tokenPriceData && 
-            this.state.tokenPriceData.koinos && 
-            this.state.tokenPriceData.koinos.usd) {
-          
-          const price = this.state.tokenPriceData.koinos.usd;
-          const balanceNum = parseFloat(balance);
-          
-          if (!isNaN(balanceNum) && price) {
-            const usdValue = balanceNum * price;
-            console.log(`KOIN USD calculation: ${balanceNum} * ${price} = ${usdValue.toFixed(2)}`);
-            return usdValue.toFixed(2);
-          }
-        }
-        console.log('Could not calculate USD value for KOIN: missing price data');
-        return null;
-      }
-      
-      // For other tokens, calculate via KOIN pools
-      console.log('Pool data available:', Object.keys(this.state.poolData));
-      console.log('Looking for token in pool data:', tokenAddress);
-      
-      if (this.state.poolData && this.state.poolData[tokenAddress]) {
-        const poolInfo = this.state.poolData[tokenAddress];
-        console.log(`Found pool info for ${symbol}:`, poolInfo);
-        
-        const koinPerToken = poolInfo.koinPerToken;
-        
-        if (koinPerToken && 
-            this.state.tokenPriceData && 
-            this.state.tokenPriceData.koinos && 
-            this.state.tokenPriceData.koinos.usd) {
-          
-          const koinPrice = this.state.tokenPriceData.koinos.usd;
-          const balanceNum = parseFloat(balance);
-          
-          if (!isNaN(balanceNum) && koinPrice) {
-            // Convert token to KOIN, then to USD
-            const koinValue = balanceNum * koinPerToken;
-            const usdValue = koinValue * koinPrice;
-            console.log(`Token USD calculation: ${balanceNum} * ${koinPerToken} * ${koinPrice} = ${usdValue.toFixed(2)}`);
-            return usdValue.toFixed(2);
-          }
-        }
-        console.log('Could not calculate USD value: missing KOIN price or invalid balance');
-      } else {
-        console.log(`No pool data found for ${symbol} (${tokenAddress})`);
       }
     } catch (error) {
       console.error('Error calculating USD value:', error);
     }
     
-    console.log(`Returning null USD value for ${symbol}`);
-    return null;
+    return { total: null, price: null };
   }
 
   async fetchTokenList() {
@@ -469,8 +424,10 @@ class AppController {
   async fetchBalance(wallet, contract) {
     const balanceElement = document.getElementById('balance');
     const balanceLabel = document.getElementById('balanceLabel');
+    const balanceUsdValue = document.getElementById('balanceUsdValue');
     
     balanceElement.textContent = "Loading...";
+    balanceUsdValue.textContent = "";
     this.state.currentWallet = wallet;
     
     const isNickname = wallet.startsWith('@');
@@ -484,9 +441,18 @@ class AppController {
       
       this.state.ensureTokenListIsArray();
       const tokenInfo = this.state.tokenListData.find(token => token && token.address === contract);
-      const symbol = tokenInfo ? tokenInfo.symbol : (contract === this.state.KOIN_ADDRESS ? 'KOIN' : 'tokens');
+      const symbol = tokenInfo ? tokenInfo.symbol : (contract === '15DJN4a8SgrbGhhGksSBASiSYjGnMU8dGL' ? 'KOIN' : 'tokens');
       
       balanceElement.textContent = cachedBalance + ' ' + symbol;
+      
+      // Add USD value for KOIN
+      if (symbol === 'KOIN') {
+        await this.fetchPriceData();
+        const valueData = this.calculateUsdValue(cachedBalance, symbol);
+        if (valueData.total) {
+          balanceUsdValue.textContent = `${valueData.total} USD`;
+        }
+      }
       return;
     }
     
@@ -500,11 +466,20 @@ class AppController {
       
       this.state.ensureTokenListIsArray();
       const tokenInfo = this.state.tokenListData.find(token => token && token.address === contract);
-      const symbol = tokenInfo ? tokenInfo.symbol : (contract === this.state.KOIN_ADDRESS ? 'KOIN' : 'tokens');
+      const symbol = tokenInfo ? tokenInfo.symbol : (contract === '15DJN4a8SgrbGhhGksSBASiSYjGnMU8dGL' ? 'KOIN' : 'tokens');
       
       this.state.saveTokenBalance(wallet, contract, response.data.value);
       
       balanceElement.textContent = response.data.value + ' ' + symbol;
+      
+      // Add USD value for KOIN
+      if (symbol === 'KOIN') {
+        await this.fetchPriceData();
+        const valueData = this.calculateUsdValue(response.data.value, symbol);
+        if (valueData.total) {
+          balanceUsdValue.textContent = `${valueData.total} USD`;
+        }
+      }
     } catch (error) {
       balanceElement.textContent = 'Error fetching balance';
       console.error('Error:', error);
@@ -522,11 +497,8 @@ class AppController {
         await this.fetchTokenList();
       }
       
-      // Fetch price data for KOIN
+      // Fetch price data
       await this.fetchPriceData();
-      
-      // Fetch pool data for other tokens
-      await this.fetchPoolData();
       
       this.state.ensureTokenListIsArray();
       
@@ -556,12 +528,13 @@ class AppController {
         if (cachedBalance && cachedBalance !== '0') {
           displayedCount++;
           
-          const usdValue = this.calculateUsdValue(cachedBalance, token.symbol, token.address);
+          const valueData = this.calculateUsdValue(cachedBalance, token.symbol);
           
           tokensWithBalance.push({
             ...token,
             balance: cachedBalance,
-            usdValue: usdValue ? parseFloat(usdValue) : 0
+            usdValue: valueData.total,
+            unitPrice: valueData.price
           });
           
           // Render token item
@@ -571,7 +544,8 @@ class AppController {
             symbol: token.symbol,
             name: token.name,
             balance: cachedBalance,
-            usdValue: usdValue ? `$${usdValue}` : '',
+            usdValue: valueData.total ? `${valueData.total}` : '',
+            unitPrice: valueData.price ? `${valueData.price}/token` : '',
             animation: ''
           });
         }
@@ -610,20 +584,25 @@ class AppController {
             this.state.saveTokenBalance(wallet, token.address, balance);
             
             if (balance && balance !== '0') {
-              const usdValue = this.calculateUsdValue(balance, token.symbol, token.address);
+              const valueData = this.calculateUsdValue(balance, token.symbol);
               
               const existingTokenIndex = tokensWithBalance.findIndex(t => t.address === token.address);
               
               if (existingTokenIndex >= 0) {
                 tokensWithBalance[existingTokenIndex].balance = balance;
-                tokensWithBalance[existingTokenIndex].usdValue = usdValue ? parseFloat(usdValue) : 0;
+                tokensWithBalance[existingTokenIndex].usdValue = valueData.total;
+                tokensWithBalance[existingTokenIndex].unitPrice = valueData.price;
                 
                 const tokenElement = tokenResultsElement.querySelector(`[data-address="${token.address}"]`);
                 if (tokenElement) {
                   tokenElement.querySelector('.token-balance').textContent = balance;
                   const usdElement = tokenElement.querySelector('.token-usd-value');
                   if (usdElement) {
-                    usdElement.textContent = usdValue ? `$${usdValue}` : '';
+                    usdElement.textContent = valueData.total ? `${valueData.total}` : '';
+                  }
+                  const priceElement = tokenElement.querySelector('.token-unit-price');
+                  if (priceElement) {
+                    priceElement.textContent = valueData.price ? `${valueData.price}/token` : '';
                   }
                   tokenElement.style.animation = 'fadeIn 0.5s';
                 }
@@ -631,7 +610,8 @@ class AppController {
                 tokensWithBalance.push({
                   ...token,
                   balance: balance,
-                  usdValue: usdValue ? parseFloat(usdValue) : 0
+                  usdValue: valueData.total,
+                  unitPrice: valueData.price
                 });
                 
                 const tokenHtml = this.render('token-item-template', {
@@ -640,7 +620,8 @@ class AppController {
                   symbol: token.symbol,
                   name: token.name,
                   balance: balance,
-                  usdValue: usdValue ? `$${usdValue}` : '',
+                  usdValue: valueData.total ? `${valueData.total}` : '',
+                  unitPrice: valueData.price ? `${valueData.price}/token` : '',
                   animation: 'animation: fadeIn 0.5s;'
                 });
                 
@@ -660,21 +641,21 @@ class AppController {
       
       // Sort tokens by USD value
       tokensWithBalance.sort((a, b) => {
-        return b.usdValue - a.usdValue; // Sort from highest to lowest USD value
+        const aValue = a.usdValue ? parseFloat(a.usdValue) : 0;
+        const bValue = b.usdValue ? parseFloat(b.usdValue) : 0;
+        return bValue - aValue; // Sort from highest to lowest
       });
       
       // Clear and re-render token list in sorted order
       tokenResultsElement.innerHTML = '';
       tokensWithBalance.forEach(token => {
-        const displayUsdValue = token.usdValue ? `$${token.usdValue.toFixed(2)}` : '';
-        
         tokenResultsElement.innerHTML += this.render('token-item-template', {
           address: token.address,
           logoURI: token.logoURI || 'https://koindx.com/logo.svg',
           symbol: token.symbol,
           name: token.name,
           balance: token.balance,
-          usdValue: displayUsdValue,
+          usdValue: token.usdValue ? `$${token.usdValue}` : '',
           animation: ''
         });
       });
