@@ -77,15 +77,6 @@ class UIController {
         }
     }
 
-    async updateManaDisplay() {
-        try {
-            const mana = await walletService.getMana();
-            this.elements.manaDisplay.textContent = `Mana: ${this.formatNumber(mana)}`;
-        } catch (error) {
-            this.elements.manaDisplay.textContent = 'Mana: Error';
-        }
-    }
-
     async connectWallet() {
         this.showLoader('Connecting to wallet...');
         
@@ -122,43 +113,6 @@ class UIController {
         } catch (error) {
             this.showMessage(`Error checking balance: ${error.message}`, 'error');
             this.elements.balanceDisplay.textContent = 'Balance: Error';
-        } finally {
-            this.hideLoader();
-        }
-    }
-
-    async sendTokens() {
-        const contractAddress = this.elements.contractInput.value.trim();
-        const receiverAddress = this.elements.receiverInput.value.trim();
-        const amount = this.elements.amountInput.value.trim();
-        
-        if (!contractAddress || !receiverAddress || !amount) {
-            this.showMessage('Please fill in all fields', 'warning');
-            return;
-        }
-        
-        this.showLoader('Sending tokens...');
-        
-        try {
-            const result = await walletService.sendTokens(contractAddress, receiverAddress, amount);
-            
-            // Reset input fields
-            this.elements.amountInput.value = '';
-            
-            // Show transaction result
-            this.showMessage('Transaction sent successfully!', 'success');
-            this.elements.transactionStatus.innerHTML = `
-                <div class="transaction-success">
-                    <p>Transaction ID: ${result.transaction.id}</p>
-                    <p>Click <a href="https://koinscan.io/transaction/${result.transaction.id}" target="_blank">here</a> to view on explorer</p>
-                </div>
-            `;
-            
-            // Update balance and mana after transaction
-            await this.checkBalance();
-            this.updateManaDisplay();
-        } catch (error) {
-            this.showMessage(`Error sending tokens: ${error.message}`, 'error');
         } finally {
             this.hideLoader();
         }
