@@ -41,7 +41,9 @@ class UIController {
         this.elements.disconnectButton.addEventListener('click', () => this.disconnectWallet());
         
         // Token interaction events
-        this.elements.balanceButton.addEventListener('click', () => this.checkBalance());
+        if (this.elements.balanceButton) {
+            this.elements.balanceButton.addEventListener('click', () => this.checkBalance());
+        }
     }
 
     updateUIState() {
@@ -112,8 +114,11 @@ class UIController {
     }
 
     updateManaDisplay() {
-        // Implementation for updating mana display
-        // This function is referenced but not fully implemented in the original code
+        // Simple implementation to avoid errors
+        if (this.elements.manaDisplay) {
+            // In a complete implementation, this would display the wallet's mana
+            this.elements.manaDisplay.textContent = 'Mana data unavailable';
+        }
     }
 
     showLoader(message = 'Loading...') {
