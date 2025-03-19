@@ -30,12 +30,17 @@ class UIController {
         });
     }
 
+    // Format address for display (e.g., "123456...7890")
+    formatAddress(address = this.walletAddress) {
+        if (!address) return 'test';
+        return `${address.substring(0, 6)}...${address.slice(-4)}`;
+    }
+
     cacheElements() {
         // Wallet connection elements
         this.elements.connectButton = document.getElementById('connect-wallet');
         this.elements.disconnectButton = document.getElementById('disconnect-wallet');
         this.elements.walletStatus = document.getElementById('wallet-status');
-        this.elements.walletAddress = document.getElementById('wallet-address');
         
         // Token interaction elements
         this.elements.contractInput = document.getElementById('contract-address');
@@ -77,8 +82,8 @@ class UIController {
         }
         
         if (isConnected) {
-            if (this.elements.walletAddress) {
-                this.elements.walletAddress.textContent = walletService.formatAddress();
+            if (this.elements.walletStatus) {
+                this.elements.walletStatus.textContent = this.formatAddress(walletService.getStoredWallet());
             }
             
             // Enable token interaction elements
@@ -87,8 +92,8 @@ class UIController {
             }
             
         } else {
-            if (this.elements.walletAddress) {
-                this.elements.walletAddress.textContent = 'Connect your wallet';
+            if (this.elements.walletStatus) {
+                this.elements.walletStatus.textContent = 'Connect your wallet';
             }
             
             if (this.elements.balanceDisplay) {

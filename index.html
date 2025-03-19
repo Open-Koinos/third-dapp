@@ -25,7 +25,7 @@
         <section class="card" aria-labelledby="wallet-section-title">
             <div class="card-header"> 
                 <div id="wallet-status" aria-live="polite"></div>
-                <div id="messages"></div>
+                <div id="messages" role="alert"></div>
 
                 <button id="connect-wallet" 
                         class="btn btn-primary"
@@ -64,7 +64,7 @@
                             aria-controls="token-balance">
                         Check Balance
                     </button>
-                    <span id="token-balance" aria-live="polite"></span>
+                    <span id="token-balance" aria-live="polite" aria-atomic="true"></span>
                 </div>
             </div>
         </section>
@@ -79,7 +79,7 @@
             </div>
         </section>
 
-        <div id="loader" class="loader" aria-live="polite" aria-hidden="true" style="display: none;">Loading...</div>
+        <div id="loader" class="loader" aria-live="polite" role="status" aria-hidden="true" style="display: none;">Loading...</div>
     </main>
 
     <footer class="app-footer">

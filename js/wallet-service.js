@@ -42,7 +42,6 @@ class WalletService {
             this.walletAddress = accounts[0].address;
             this.storeWallet(this.walletAddress);
             
-            return this.walletAddress;
         } catch (error) {
             console.error('Error connecting to Kondor wallet:', error);
             
@@ -155,12 +154,6 @@ class WalletService {
         } catch (error) {
             console.error('Error clearing wallet address:', error);
         }
-    }
-
-    // Format address for display (e.g., "123456...7890")
-    formatAddress(address = this.walletAddress) {
-        if (!address) return '';
-        return `${address.substring(0, 6)}...${address.slice(-4)}`;
     }
 }
 
