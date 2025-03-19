@@ -1,23 +1,11 @@
-// wallet-service.js
+// Completely revised wallet-service.js
 const WALLET_STORAGE_KEY = 'third_dapp_wallet';
-
-// Polyfill for crypto.randomUUID if needed
-if (typeof crypto !== 'undefined' && !crypto.randomUUID) {
-    crypto.randomUUID = function() {
-        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
-        );
-    };
-    console.log("Added crypto.randomUUID polyfill");
-}
 
 class WalletService {
     constructor() {
         // Reference to the kondor object injected by the extension
         this.kondor = window.kondor;
         this.walletAddress = this.getStoredWallet();
-        this.signer = null;
-        this.accountData = null;
     }
 
     // Connect to wallet and get accounts
@@ -33,46 +21,25 @@ class WalletService {
                 throw new Error('No accounts found in Kondor wallet');
             }
 
-            this.accountData = accounts[0];
             this.walletAddress = accounts[0].address;
             this.storeWallet(this.walletAddress);
-            
-            // Try to get a signer immediately
-            await this.getSigner();
             
             return this.walletAddress;
         } catch (error) {
             console.error('Error connecting to Kondor wallet:', error);
-            // Clear any stored data on failed connection
             this.disconnect();
             throw error;
         }
     }
 
-    // Get signer for transactions
-    async getSigner() {
-        try {
-            if (!this.walletAddress) {
-                throw new Error('No wallet connected');
-            }
-
-            this.signer = this.kondor.getSigner(this.walletAddress);
-            return this.signer;
-        } catch (error) {
-            console.error('Error getting signer:', error);
-            this.signer = null;
-            throw error;
-        }
-    }
-
-    // Get token balance
+    // Get token balance using direct API call
     async getBalance(contractAddress) {
         try {
             if (!this.walletAddress) {
                 throw new Error('No wallet connected');
             }
-    
-            // Using the Koinos API directly - this is what Open-K is doing behind the scenes
+
+            // Using the Koinos API directly
             const response = await fetch(`https://api.koinos.io/v1/token/${contractAddress}/balance/${this.walletAddress}`);
             
             if (!response.ok) {
@@ -87,26 +54,9 @@ class WalletService {
         }
     }
 
-    // Get available mana
-    async getMana() {
-        try {
-            if (!this.walletAddress) {
-                throw new Error('No wallet connected');
-            }
-
-            const rc = await this.kondor.provider.getAccountRc(this.walletAddress);
-            return rc?.rc || '0';
-        } catch (error) {
-            console.error('Error getting mana:', error);
-            return '0';
-        }
-    }
-
     // Disconnect wallet
     disconnect() {
         this.walletAddress = null;
-        this.signer = null;
-        this.accountData = null;
         this.clearStoredWallet();
     }
 
