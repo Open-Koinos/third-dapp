@@ -37,8 +37,13 @@ class UIController {
 
     setupEventListeners() {
         // Wallet connection events
-        this.elements.connectButton.addEventListener('click', () => this.connectWallet());
-        this.elements.disconnectButton.addEventListener('click', () => this.disconnectWallet());
+        if (this.elements.connectButton) {
+            this.elements.connectButton.addEventListener('click', () => this.connectWallet());
+        }
+        
+        if (this.elements.disconnectButton) {
+            this.elements.disconnectButton.addEventListener('click', () => this.disconnectWallet());
+        }
         
         // Token interaction events
         if (this.elements.balanceButton) {
@@ -50,25 +55,45 @@ class UIController {
         const isConnected = walletService.isConnected();
         
         // Update connection status elements
-        this.elements.connectButton.style.display = isConnected ? 'none' : 'block';
-        this.elements.disconnectButton.style.display = isConnected ? 'block' : 'none';
-        this.elements.walletStatus.textContent = isConnected ? 'Connected' : 'Not Connected';
-        this.elements.walletStatus.className = isConnected ? 'status connected' : 'status disconnected';
+        if (this.elements.connectButton && this.elements.disconnectButton) {
+            this.elements.connectButton.style.display = isConnected ? 'none' : 'block';
+            this.elements.disconnectButton.style.display = isConnected ? 'block' : 'none';
+        }
+        
+        if (this.elements.walletStatus) {
+            this.elements.walletStatus.textContent = isConnected ? 'Connected' : 'Not Connected';
+            this.elements.walletStatus.className = isConnected ? 'status connected' : 'status disconnected';
+        }
         
         if (isConnected) {
-            this.elements.walletAddress.textContent = walletService.formatAddress();
+            if (this.elements.walletAddress) {
+                this.elements.walletAddress.textContent = walletService.formatAddress();
+            }
+            
             // Enable token interaction elements
-            this.elements.balanceButton.disabled = false;
+            if (this.elements.balanceButton) {
+                this.elements.balanceButton.disabled = false;
+            }
             
             // Update mana display
             this.updateManaDisplay();
         } else {
-            this.elements.walletAddress.textContent = 'Connect your wallet';
-            this.elements.manaDisplay.textContent = '';
-            this.elements.balanceDisplay.textContent = '';
+            if (this.elements.walletAddress) {
+                this.elements.walletAddress.textContent = 'Connect your wallet';
+            }
+            
+            if (this.elements.manaDisplay) {
+                this.elements.manaDisplay.textContent = '';
+            }
+            
+            if (this.elements.balanceDisplay) {
+                this.elements.balanceDisplay.textContent = '';
+            }
             
             // Disable token interaction elements
-            this.elements.balanceButton.disabled = true;
+            if (this.elements.balanceButton) {
+                this.elements.balanceButton.disabled = true;
+            }
         }
     }
 
@@ -81,6 +106,7 @@ class UIController {
             this.showMessage('Wallet connected successfully!', 'success');
         } catch (error) {
             this.showMessage(`Failed to connect wallet: ${error.message}`, 'error');
+            console.error('Connection error:', error);
         } finally {
             this.hideLoader();
         }
@@ -93,6 +119,11 @@ class UIController {
     }
 
     async checkBalance() {
+        if (!this.elements.contractInput) {
+            this.showMessage('Contract input field not found', 'error');
+            return;
+        }
+        
         const contractAddress = this.elements.contractInput.value.trim();
         
         if (!contractAddress) {
@@ -104,10 +135,14 @@ class UIController {
         
         try {
             const balance = await walletService.getBalance(contractAddress);
-            this.elements.balanceDisplay.textContent = `Balance: ${this.formatNumber(balance)}`;
+            if (this.elements.balanceDisplay) {
+                this.elements.balanceDisplay.textContent = `Balance: ${this.formatNumber(balance)}`;
+            }
         } catch (error) {
             this.showMessage(`Error checking balance: ${error.message}`, 'error');
-            this.elements.balanceDisplay.textContent = 'Balance: Error';
+            if (this.elements.balanceDisplay) {
+                this.elements.balanceDisplay.textContent = 'Balance: Error';
+            }
         } finally {
             this.hideLoader();
         }
@@ -123,13 +158,17 @@ class UIController {
 
     showLoader(message = 'Loading...') {
         this.isLoading = true;
-        this.elements.loader.textContent = message;
-        this.elements.loader.style.display = 'flex';
+        if (this.elements.loader) {
+            this.elements.loader.textContent = message;
+            this.elements.loader.style.display = 'flex';
+        }
     }
 
     hideLoader() {
         this.isLoading = false;
-        this.elements.loader.style.display = 'none';
+        if (this.elements.loader) {
+            this.elements.loader.style.display = 'none';
+        }
     }
 
     showMessage(message, type = 'info') {
