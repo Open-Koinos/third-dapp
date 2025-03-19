@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Register service worker if available
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/js/service-worker.js')
+            navigator.serviceWorker.register('/third-dapp/js/service-worker.js')
                 .then(registration => {
                     console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 })
