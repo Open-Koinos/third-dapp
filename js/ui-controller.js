@@ -24,7 +24,6 @@ class UIController {
         this.elements.disconnectButton = document.getElementById('disconnect-wallet');
         this.elements.walletStatus = document.getElementById('wallet-status');
         this.elements.walletAddress = document.getElementById('wallet-address');
-        this.elements.manaDisplay = document.getElementById('mana-display');
         
         // Token interaction elements
         this.elements.contractInput = document.getElementById('contract-address');
@@ -75,15 +74,9 @@ class UIController {
                 this.elements.balanceButton.disabled = false;
             }
             
-            // Update mana display
-            this.updateManaDisplay();
         } else {
             if (this.elements.walletAddress) {
                 this.elements.walletAddress.textContent = 'Connect your wallet';
-            }
-            
-            if (this.elements.manaDisplay) {
-                this.elements.manaDisplay.textContent = '';
             }
             
             if (this.elements.balanceDisplay) {
@@ -145,14 +138,6 @@ class UIController {
             }
         } finally {
             this.hideLoader();
-        }
-    }
-
-    updateManaDisplay() {
-        // Simple implementation to avoid errors
-        if (this.elements.manaDisplay) {
-            // In a complete implementation, this would display the wallet's mana
-            this.elements.manaDisplay.textContent = 'Mana data unavailable';
         }
     }
 
