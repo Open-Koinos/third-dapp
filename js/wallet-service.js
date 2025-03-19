@@ -1,4 +1,8 @@
-const WALLET_STORAGE_KEY = 'third_dapp_wallet';
+const WALLET_STORAGE_KEY = generateStorageKey({
+    // domain is automatically detected from current URL
+    appName: 'CryptoWallet',
+    feature: 'wallet'
+  });
 
 class WalletService {
     constructor() {
@@ -88,7 +92,6 @@ class WalletService {
                 throw new Error('Axios is not available');
             }
 
-            // Using axios
             const response = await window.axios.get(`https://api.koinos.io/v1/token/${contractAddress}/balance/${this.walletAddress}`, {
                 timeout: 10000,
                 headers: {
@@ -160,5 +163,46 @@ class WalletService {
         return `${address.substring(0, 6)}...${address.slice(-4)}`;
     }
 }
+
+function generateStorageKey(options = {}) {
+    // Set default options
+    const config = {
+      domain: options.domain || window.location.hostname || 'localhost',
+      appName: options.appName || 'app',
+      feature: options.feature || 'default',
+      version: options.version || '1'
+    };
+    
+    // For localhost development, use a default domain
+    if (config.domain === 'localhost' || config.domain === '127.0.0.1' || config.domain === '') {
+      config.domain = 'local.app';
+    }
+    
+    // Detect environment based on domain
+    let environment = 'production';
+    if (config.domain.includes('localhost') || 
+        config.domain.includes('127.0.0.1') || 
+        config.domain.includes('test') || 
+        config.domain.includes('dev')) {
+      environment = 'development';
+    }
+    
+    // Extract domain parts and reverse them
+    const domainParts = config.domain.split('.')
+      .filter(part => part && part.trim() !== '')
+      .reverse();
+    
+    // Build the key components array
+    const keyParts = [
+      ...domainParts,
+      config.appName.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      config.feature.toLowerCase().replace(/[^a-z0-9]/g, ''),
+      `v${config.version.toString().replace(/[^a-z0-9]/g, '')}`,
+      environment
+    ];
+    
+    // Join all parts with dots
+    return keyParts.join('.');
+  }
 
 export default new WalletService();

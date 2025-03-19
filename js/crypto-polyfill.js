@@ -1,4 +1,3 @@
-// crypto-polyfill.js
 (function() {
     // Check if crypto.randomUUID is not available
     if (!crypto.randomUUID) {

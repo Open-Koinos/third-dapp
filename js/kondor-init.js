@@ -1,5 +1,3 @@
-// This script checks for and initializes the Kondor wallet connection
-
 class KondorInitializer {
     constructor() {
         this.isKondorReady = false;
