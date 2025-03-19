@@ -15,27 +15,12 @@
     </div>
 
     <div class="card">
-        <div class="card-header">
-            <h2>Wallet Connection</h2>
+        <div class="card-header wallet-details">
+                <div id="loader" style="display: none;">Loading...</div>
+                <button id="connect-wallet" class="btn btn-primary">Connect Wallet</button>
+                <button id="disconnect-wallet" class="btn btn-danger" style="display: none;">Disconnect</button>
         </div>
-        <div class="card-body">
-            <div class="wallet-details">
-                <div>
-                    <div id="wallet-address">Connect your wallet</div>
-                    <div id="mana-display"></div>
-                </div>
-                <div id="wallet-status" class="status disconnected">Not Connected</div>
-            </div>
-            
-            <button id="connect-wallet" class="btn btn-primary">Connect Wallet</button>
-            <button id="disconnect-wallet" class="btn btn-danger" style="display: none;">Disconnect</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header">
-            <h2>Token Interactions</h2>
-        </div>
+        
         <div class="card-body">
             <div class="form-section">
                 <label for="contract-address">Contract Address:</label>
@@ -49,8 +34,6 @@
             </div>
         </div>
     </div>
-
-    <div id="loader" style="display: none;">Loading...</div>
 
     <!-- Required Scripts - Order is important -->
     <script src="js/crypto-polyfill.js"></script>
