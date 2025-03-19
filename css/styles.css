@@ -53,10 +53,12 @@
   
   /* Layout */
   .app-header {
+    background-color: black;
+    color: white;
     text-align: center;
     margin-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
+    padding: 1rem;
   }
   
   /* Card styling */
