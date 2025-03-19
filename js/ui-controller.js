@@ -28,12 +28,8 @@ class UIController {
         
         // Token interaction elements
         this.elements.contractInput = document.getElementById('contract-address');
-        this.elements.receiverInput = document.getElementById('receiver-address');
-        this.elements.amountInput = document.getElementById('token-amount');
         this.elements.balanceButton = document.getElementById('check-balance');
-        this.elements.sendButton = document.getElementById('send-tokens');
         this.elements.balanceDisplay = document.getElementById('token-balance');
-        this.elements.transactionStatus = document.getElementById('transaction-status');
         
         // Loader element
         this.elements.loader = document.getElementById('loader');
@@ -46,7 +42,6 @@ class UIController {
         
         // Token interaction events
         this.elements.balanceButton.addEventListener('click', () => this.checkBalance());
-        this.elements.sendButton.addEventListener('click', () => this.sendTokens());
     }
 
     updateUIState() {
@@ -62,7 +57,6 @@ class UIController {
             this.elements.walletAddress.textContent = walletService.formatAddress();
             // Enable token interaction elements
             this.elements.balanceButton.disabled = false;
-            this.elements.sendButton.disabled = false;
             
             // Update mana display
             this.updateManaDisplay();
@@ -73,7 +67,6 @@ class UIController {
             
             // Disable token interaction elements
             this.elements.balanceButton.disabled = true;
-            this.elements.sendButton.disabled = true;
         }
     }
 
@@ -116,6 +109,11 @@ class UIController {
         } finally {
             this.hideLoader();
         }
+    }
+
+    updateManaDisplay() {
+        // Implementation for updating mana display
+        // This function is referenced but not fully implemented in the original code
     }
 
     showLoader(message = 'Loading...') {
