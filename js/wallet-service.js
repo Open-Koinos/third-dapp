@@ -1,65 +1,78 @@
 // wallet-service.js
 const WALLET_STORAGE_KEY = 'third_dapp_wallet';
 
+// Polyfill for crypto.randomUUID if needed
+if (typeof crypto !== 'undefined' && !crypto.randomUUID) {
+    crypto.randomUUID = function() {
+        return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+            (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+    };
+    console.log("Added crypto.randomUUID polyfill");
+}
+
 class WalletService {
     constructor() {
+        // Reference to the kondor object injected by the extension
         this.kondor = window.kondor;
         this.walletAddress = this.getStoredWallet();
-        this.isInitialized = false;
+        this.signer = null;
+        this.accountData = null;
     }
 
-    // Error handler utility
-    handleError(error, context) {
-        console.error(`Error ${context}:`, error);
-        return error;
-    }
-
-    // Initialize check for wallet extension
-    initialize() {
-        if (typeof window.kondor === 'undefined') {
-            console.warn('Kondor wallet extension not detected');
-            return false;
-        }
-        this.isInitialized = true;
-        return true;
-    }
-
-    // Connect to wallet using a simpler approach
+    // Connect to wallet and get accounts
     async connect() {
         try {
-            if (!this.isInitialized) {
-                if (!this.initialize()) {
-                    throw new Error('Kondor wallet not available');
-                }
+            if (!this.kondor) {
+                throw new Error('Kondor wallet extension not detected');
             }
 
-            // Use a try-catch specifically for getAccounts to handle any potential issues
-            try {
-                const accounts = await this.kondor.getAccounts();
-                
-                if (!accounts || accounts.length === 0) {
-                    throw new Error('No accounts found');
-                }
-
-                this.walletAddress = accounts[0].address;
-                this.storeWallet(this.walletAddress);
-                
-                return this.walletAddress;
-            } catch (accountError) {
-                throw this.handleError(accountError, 'getting accounts');
+            const accounts = await this.kondor.getAccounts();
+            
+            if (!Array.isArray(accounts) || accounts.length === 0) {
+                throw new Error('No accounts found in Kondor wallet');
             }
+
+            this.accountData = accounts[0];
+            this.walletAddress = accounts[0].address;
+            this.storeWallet(this.walletAddress);
+            
+            // Try to get a signer immediately
+            await this.getSigner();
+            
+            return this.walletAddress;
         } catch (error) {
-            throw this.handleError(error, 'connecting to Kondor wallet');
+            console.error('Error connecting to Kondor wallet:', error);
+            // Clear any stored data on failed connection
+            this.disconnect();
+            throw error;
         }
     }
 
-    // Get balance using direct API
-    async getBalance(contractAddress) {
+    // Get signer for transactions
+    async getSigner() {
         try {
             if (!this.walletAddress) {
                 throw new Error('No wallet connected');
             }
 
+            this.signer = this.kondor.getSigner(this.walletAddress);
+            return this.signer;
+        } catch (error) {
+            console.error('Error getting signer:', error);
+            this.signer = null;
+            throw error;
+        }
+    }
+
+    // Get token balance
+    async getBalance(contractAddress) {
+        try {
+            if (!this.walletAddress) {
+                throw new Error('No wallet connected');
+            }
+    
+            // Using the Koinos API directly - this is what Open-K is doing behind the scenes
             const response = await fetch(`https://api.koinos.io/v1/token/${contractAddress}/balance/${this.walletAddress}`);
             
             if (!response.ok) {
@@ -74,79 +87,54 @@ class WalletService {
         }
     }
 
-    // Get mana (simplified)
+    // Get available mana
     async getMana() {
-        try {
-            if (!this.walletAddress) {
-                return '0';
-            }
-
-            const response = await fetch(`https://api.koinos.io/v1/chain/get_account_rc?account=${this.walletAddress}`);
-            
-            if (!response.ok) {
-                return '0';
-            }
-            
-            const data = await response.json();
-            return data.rc || '0';
-        } catch (error) {
-            return '0';
-        }
-    }
-
-    // Mock sending tokens for now
-    async sendTokens(contractAddress, receiverAddress, amount) {
         try {
             if (!this.walletAddress) {
                 throw new Error('No wallet connected');
             }
-            
-            console.log("Transaction Details:", {
-                sender: this.walletAddress,
-                contract: contractAddress,
-                receiver: receiverAddress,
-                amount: amount
-            });
-            
-            // Mock transaction for testing
-            return {
-                transaction: {
-                    id: "mock_tx_" + Math.floor(Math.random() * 1000000),
-                    status: "success"
-                }
-            };
+
+            const rc = await this.kondor.provider.getAccountRc(this.walletAddress);
+            return rc?.rc || '0';
         } catch (error) {
-            throw this.handleError(error, 'sending tokens');
+            console.error('Error getting mana:', error);
+            return '0';
         }
     }
 
-    // Standard wallet methods
+    // Disconnect wallet
     disconnect() {
         this.walletAddress = null;
+        this.signer = null;
+        this.accountData = null;
         this.clearStoredWallet();
     }
 
+    // Check if wallet is connected
     isConnected() {
         return !!this.walletAddress;
     }
 
+    // Store wallet address in localStorage
     storeWallet(address) {
         try {
-            localStorage.setItem(WALLET_STORAGE_KEY, address);
+            localStorage.setItem(WALLET_STORAGE_KEY, JSON.stringify(address));
         } catch (error) {
             console.error('Error storing wallet address:', error);
         }
     }
 
+    // Get stored wallet address from localStorage
     getStoredWallet() {
         try {
-            return localStorage.getItem(WALLET_STORAGE_KEY) || null;
+            return JSON.parse(localStorage.getItem(WALLET_STORAGE_KEY) || 'null');
         } catch (error) {
             console.error('Error retrieving wallet address:', error);
             return null;
         }
     }
 
+    // Clear stored wallet address
     clearStoredWallet() {
         try {
             localStorage.removeItem(WALLET_STORAGE_KEY);
@@ -155,6 +143,7 @@ class WalletService {
         }
     }
 
+    // Format address for display (e.g., "123456...7890")
     formatAddress(address = this.walletAddress) {
         if (!address) return '';
         return `${address.substring(0, 6)}...${address.slice(-4)}`;
