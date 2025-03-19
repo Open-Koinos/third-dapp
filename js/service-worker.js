@@ -3,7 +3,7 @@ const CACHE_NAME = 'third-dapp-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/css/minimal.css',
+  '/css/styles.css',
   '/js/crypto-polyfill.js',
   '/js/base/koinos.min.js',
   '/js/base/kondor.min.js',

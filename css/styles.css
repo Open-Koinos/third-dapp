@@ -174,15 +174,70 @@
   
   /* Toast notifications */
   .message {
-    position: fixed;
-    top: 20px;
-    right: 20px;
     padding: 0.75rem 1rem;
     background-color: var(--black);
     color: var(--white);
     border-radius: 4px;
-    z-index: 999;
-    max-width: 300px;
+  }
+
+  /* Message container */
+#messages {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: calc(100% - 30px);
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Base message styling */
+  .message, .info, .success, .error, .warning {
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    width: 100%;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin-bottom: 8px;
+    transition: opacity 0.2s ease-out;
+  }
+  
+  /* Info message - default */
+  .info {
+    background-color: var(--dark-gray);
+    color: var(--white);
+    border-left: 3px solid var(--black);
+  }
+  
+  /* Success message */
+  .success {
+    background-color: var(--light-gray);
+    color: var(--black);
+    border-left: 3px solid var(--black);
+  }
+  
+  /* Error message */
+  .error {
+    background-color: var(--black);
+    color: var(--white);
+    border-left: 3px solid var(--dark-gray);
+  }
+  
+  /* Warning message */
+  .warning {
+    background-color: var(--white);
+    color: var(--black);
+    border: 1px solid var(--black);
+    border-left: 3px solid var(--black);
+  }
+  
+  /* Fade out animation */
+  .fade-out {
+    opacity: 0;
   }
   
   /* PWA specific optimizations */
@@ -209,5 +264,56 @@
     
     h1 {
       font-size: 1.5rem;
+    }
+  }
+
+  .app-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    width: 100%;
+  }
+  
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .footer-section {
+    margin-bottom: 0.5rem;
+  }
+  
+  .copyright {
+    font-size: 0.85rem;
+    color: var(--mid-gray);
+  }
+  
+  .footer-nav {
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .footer-link {
+    color: var(--dark-gray);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  
+  .footer-link:hover {
+    color: var(--black);
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 480px) {
+    .footer-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .footer-nav {
+      margin-top: 0.5rem;
     }
   }

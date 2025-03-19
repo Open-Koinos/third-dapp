@@ -17,33 +17,91 @@
     <link rel="apple-touch-icon" href="images/icon-192x192.png">
 </head>
 <body>
-    <div class="app-header">
+    <header class="app-header">
         <h1>Third Dapp</h1>
-    </div>
+    </header>
+    
+    <main>
+        <section class="card" aria-labelledby="wallet-section-title">
+            <div class="card-header"> 
+                <div id="wallet-status" aria-live="polite"></div>
+                <div id="messages"></div>
 
-    <div class="card">
-        <div class="card-header">
-            <div id="loader" style="display: none;">Loading...</div>
-            <button id="connect-wallet" class="btn btn-primary">Connect Wallet</button>
-            <button id="disconnect-wallet" class="btn btn-danger" style="display: none;">Disconnect</button>
-        </div>
-        
-        <div class="card-body">
-            <div class="form-section">
-                <label for="contract-address">Contract Address:</label>
-                <input type="text" id="contract-address" value="15DJN4a8SgrbGhhGksSBASiSYjGnMU8dGL" placeholder="Enter contract address">
-                <small class="form-text">Default is KOIN token contract</small>
+                <button id="connect-wallet" 
+                        class="btn btn-primary"
+                        data-interaction="wallet-connect"
+                        data-description="Connects to Kondor wallet"
+                        data-requires="kondor-extension"
+                        aria-controls="wallet-status">
+                    Connect Wallet
+                </button>
+                
+                <button id="disconnect-wallet" 
+                        class="btn btn-danger" 
+                        style="display: none;"
+                        aria-controls="wallet-status">
+                    Disconnect
+                </button>
             </div>
             
-            <div class="form-section">
-                <button id="check-balance" class="btn btn-info" disabled>Check Balance</button>
-                <div id="token-balance"></div>
+            <div class="card-body">
+                <div class="form-section">
+                    <label for="contract-address">Contract Address: <small id="contract-address-help" class="form-text">Default is KOIN token contract</small></label>
+                    <input type="text" 
+                           id="contract-address" 
+                           value="15DJN4a8SgrbGhhGksSBASiSYjGnMU8dGL" 
+                           placeholder="Enter contract address"
+                           aria-describedby="contract-address-help">
+                </div>
+                
+                <div class="form-section">
+                    <button id="check-balance" 
+                            class="btn btn-info" 
+                            disabled
+                            data-interaction="token-balance"
+                            data-description="Checks token balance for the specified contract"
+                            data-requires="wallet-connection"
+                            aria-controls="token-balance">
+                        Check Balance
+                    </button>
+                    <span id="token-balance" aria-live="polite"></span>
+                </div>
             </div>
+        </section>
+
+        <section class="card" aria-labelledby="info-section-title">
+            <div class="card-header">
+                <h2>Fork It - You're Ready</h2>
+            </div>
+
+            <div class="card-body">
+                <a href="https://github.com/Open-Koinos/third-dapp">github.com/Open-Koinos/third-dapp</a>
+            </div>
+        </section>
+
+        <div id="loader" class="loader" aria-live="polite" aria-hidden="true" style="display: none;">Loading...</div>
+    </main>
+
+    <footer class="app-footer">
+        <div class="footer-content">
+          <div class="footer-section">
+            <p class="copyright">© Feeling Classy</p>
+          </div>
+          <div class="footer-section">
+            <nav class="footer-nav">
+              <a href="#" class="footer-link">Terms</a>
+              <a href="#" class="footer-link">Privacy</a>
+              <a href="#" class="footer-link">Help</a>
+            </nav>
+          </div>
         </div>
-    </div>
+      </footer>
 
     <!-- Required Scripts - Order is important -->
     <script src="js/crypto-polyfill.js"></script>
+    
+    <!-- Add Axios before other scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <!-- Koinos & Kondor Scripts -->
     <script src="js/base/koinos.min.js"></script>

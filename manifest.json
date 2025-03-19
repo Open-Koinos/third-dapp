@@ -1,7 +1,7 @@
 {
     "name": "Third Dapp",
-    "short_name": "Third",
-    "description": "A lightweight Koinos wallet dApp",
+    "short_name": "third-dapp",
+    "description": "A lightweight Koinos dapp boilerplate",
     "start_url": "/index.html",
     "display": "standalone",
     "orientation": "portrait",

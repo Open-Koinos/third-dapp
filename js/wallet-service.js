@@ -1,4 +1,3 @@
-// Improved wallet-service.js
 const WALLET_STORAGE_KEY = 'third_dapp_wallet';
 
 class WalletService {
@@ -6,6 +5,11 @@ class WalletService {
         // Reference to the kondor object injected by the extension
         this.kondor = window.kondor;
         this.walletAddress = this.getStoredWallet();
+        
+        // Check if axios is available
+        if (!window.axios) {
+            console.error('Axios is not loaded. Make sure to include the axios script in your HTML.');
+        }
     }
 
     // Connect to wallet and get accounts
@@ -59,7 +63,7 @@ class WalletService {
     }
 
     // Helper method to add timeout to promises
-    promiseWithTimeout(promise, timeoutMs, errorMessage) {
+    async promiseWithTimeout(promise, timeoutMs, errorMessage) {
         let timeoutHandle;
         const timeoutPromise = new Promise((_, reject) => {
             timeoutHandle = setTimeout(() => reject(new Error(errorMessage)), timeoutMs);
@@ -73,29 +77,41 @@ class WalletService {
         });
     }
 
-    // Get token balance using direct API call
+    // Get token balance
     async getBalance(contractAddress) {
         try {
             if (!this.walletAddress) {
                 throw new Error('No wallet connected');
             }
 
-            // Using the Koinos API directly
-            const response = await this.promiseWithTimeout(
-                fetch(`https://api.koinos.io/v1/token/${contractAddress}/balance/${this.walletAddress}`),
-                10000,
-                'API request timed out'
-            );
-            
-            if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+            if (!window.axios) {
+                throw new Error('Axios is not available');
             }
+
+            // Using axios
+            const response = await window.axios.get(`https://api.koinos.io/v1/token/${contractAddress}/balance/${this.walletAddress}`, {
+                timeout: 10000,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
             
-            const data = await response.json();
-            return data.value || '0';
+            return response.data.value || '0';
         } catch (error) {
             console.error('Error getting balance:', error);
-            throw error; // Re-throw to handle in the UI
+            
+            // Handle Axios specific errors
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                throw new Error(`API error: ${error.response.status}`);
+            } else if (error.request) {
+                // The request was made but no response was received
+                throw new Error('No response from API server');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                throw error;
+            }
         }
     }
 

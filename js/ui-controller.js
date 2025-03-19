@@ -1,4 +1,3 @@
-// ui-controller.js
 import walletService from './wallet-service.js';
 
 class UIController {
@@ -16,6 +15,19 @@ class UIController {
         
         // Initialize UI state
         this.updateUIState();
+    }
+
+    // Add to ui-controller.js
+    loadInteractionData() {
+        document.querySelectorAll('[data-interaction]').forEach(element => {
+        const interaction = element.dataset.interaction;
+        const description = element.dataset.description;
+        const requires = element.dataset.requires;
+        
+        // Store interaction metadata or use it to setup behaviors
+        console.log(`Interaction: ${interaction}, Requires: ${requires}`);
+        // Additional initialization based on metadata
+        });
     }
 
     cacheElements() {
@@ -124,8 +136,6 @@ class UIController {
             return;
         }
         
-        this.showLoader('Checking balance...');
-        
         try {
             const balance = await walletService.getBalance(contractAddress);
             if (this.elements.balanceDisplay) {
@@ -136,8 +146,6 @@ class UIController {
             if (this.elements.balanceDisplay) {
                 this.elements.balanceDisplay.textContent = 'Balance: Error';
             }
-        } finally {
-            this.hideLoader();
         }
     }
 
@@ -157,21 +165,40 @@ class UIController {
     }
 
     showMessage(message, type = 'info') {
+        // Clear any existing timeouts
+        if (this.messageTimeouts) {
+            this.messageTimeouts.forEach(timeout => clearTimeout(timeout));
+        }
+        
+        // Initialize the timeouts array
+        this.messageTimeouts = [];
+        
+        // Clear the messages container
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.innerText = '';
+        
         // Create message element
-        const messageElement = document.createElement('div');
-        messageElement.className = `message ${type}`;
+        const messageElement = document.createElement('span');
+        messageElement.className = `${type}`;
         messageElement.textContent = message;
         
         // Add to document
-        document.body.appendChild(messageElement);
+        messagesContainer.appendChild(messageElement);
         
-        // Remove after 5 seconds
-        setTimeout(() => {
+        // Set new timeouts and store their IDs
+        const fadeTimeout = setTimeout(() => {
             messageElement.classList.add('fade-out');
-            setTimeout(() => {
-                document.body.removeChild(messageElement);
-            }, 500);
+            
+            const removeTimeout = setTimeout(() => {
+                if (messagesContainer.contains(messageElement)) {
+                    messagesContainer.removeChild(messageElement);
+                }
+            }, 200);
+            
+            this.messageTimeouts.push(removeTimeout);
         }, 5000);
+        
+        this.messageTimeouts.push(fadeTimeout);
     }
 
     formatNumber(num) {
