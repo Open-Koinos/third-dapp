@@ -1,4 +1,3 @@
-// kondor-init.js
 // This script checks for and initializes the Kondor wallet connection
 
 class KondorInitializer {
