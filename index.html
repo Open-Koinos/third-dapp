@@ -112,16 +112,5 @@
     <script type="module" src="js/wallet-service.js"></script>
     <script type="module" src="js/ui-controller.js"></script>
     <script type="module" src="js/app.js"></script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/js/service-worker.js')
-                    .then(reg => console.log('Service worker registered'))
-                    .catch(err => console.log('Service worker registration failed', err));
-            });
-        }
-    </script>
 </body>
 </html>
